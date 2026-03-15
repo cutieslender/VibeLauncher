@@ -4,5 +4,5 @@ dist/** filter=lfs diff=lfs merge=lfs -text
 git filter=lfs diff=lfs merge=lfs -text
 add filter=lfs diff=lfs merge=lfs -text
 node_modules/electron/dist/*.exe filter=lfs diff=lfs merge=lfs -text
-dist/**/*.exe filter=lfs diff=lfs merge=lfs -text
 dist/**/*.AppImage filter=lfs diff=lfs merge=lfs -text
+dist/**/*.exe filter=lfs diff=lfs merge=lfs -text
