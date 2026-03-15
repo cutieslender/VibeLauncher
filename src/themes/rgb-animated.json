@@ -1,0 +1,105 @@
+{
+  "id": "rgb-animated",
+  "name": "RGB ✦",
+  "description": "Cycle arc-en-ciel fluide avec gradients animés — le mode gamer ultime",
+  "author": "VibeLauncher",
+  "version": "1.0.0",
+  "animated": true,
+  
+  "colors": {
+    "bg": "#060608",
+    "surface": "rgba(10, 10, 18, 0.95)",
+    "surface2": "rgba(16, 16, 28, 0.90)",
+    "surface3": "rgba(22, 22, 38, 0.90)",
+    "border": "rgba(255, 255, 255, 0.1)",
+    "accent": "#ff6eb4",
+    "accent2": "#a29bfe",
+    "accent3": "#74b9ff",
+    "green": "#55efc4",
+    "gold": "#ffd700",
+    "red": "#ff6b6b",
+    "orange": "#ffa502",
+    "text": "#eef0f5",
+    "text2": "#b0b5c8",
+    "text3": "#606580",
+    "forge": "#e07020",
+    "fabric": "#c4a020",
+    "glow": "0 0 25px rgba(255, 110, 180, 0.3)",
+    "glow_strong": "0 0 50px rgba(255, 110, 180, 0.5)"
+  },
+
+  "rgb": { "r": 255, "g": 110, "b": 180 },
+
+  "cycle": {
+    "enabled": true,
+    "speed": 2000,
+    "colors": [
+      { "accent": "#ff6eb4", "accent2": "#d44490", "accent3": "#ffaad4", "r": 255, "g": 110, "b": 180 },
+      { "accent": "#ff6b6b", "accent2": "#ee5a24", "accent3": "#ff9b9b", "r": 255, "g": 107, "b": 107 },
+      { "accent": "#ffa502", "accent2": "#cc8400", "accent3": "#ffc048", "r": 255, "g": 165, "b": 2 },
+      { "accent": "#ffd700", "accent2": "#ccaa00", "accent3": "#ffe94d", "r": 255, "g": 215, "b": 0 },
+      { "accent": "#55efc4", "accent2": "#00b894", "accent3": "#a0ffde", "r": 85, "g": 239, "b": 196 },
+      { "accent": "#74b9ff", "accent2": "#0984e3", "accent3": "#a8d4ff", "r": 116, "g": 185, "b": 255 },
+      { "accent": "#a29bfe", "accent2": "#6c5ce7", "accent3": "#c4bcff", "r": 162, "g": 155, "b": 254 },
+      { "accent": "#fd79a8", "accent2": "#e84393", "accent3": "#ffaac8", "r": 253, "g": 121, "b": 168 }
+    ]
+  },
+
+  "background": {
+    "type": "gradient-animated",
+    "gradient": "linear-gradient(135deg, #060608 0%, #0a0818 30%, #080616 60%, #060608 100%)",
+    "particles": {
+      "enabled": true,
+      "type": "stars",
+      "color": "dynamic",
+      "count": 40,
+      "speed": 0.4
+    },
+    "overlay": "none"
+  },
+
+  "effects": {
+    "glassmorphism": true,
+    "blur": "14px",
+    "borderGlow": true,
+    "hoverScale": 1.03,
+    "transitionSpeed": "0.3s",
+    "scrollbarColor": "dynamic",
+    "selectionBg": "dynamic",
+    "selectionColor": "#060608"
+  },
+
+  "sidebar": {
+    "background": "rgba(6, 6, 12, 0.75)",
+    "activeGlow": "dynamic",
+    "hoverBorder": "dynamic",
+    "logoShadow": "dynamic"
+  },
+
+  "animations": {
+    "rgbRotate": {
+      "name": "rgb-hue-rotate",
+      "css": "@keyframes rgb-hue-rotate { 0% { filter: hue-rotate(0deg); } 100% { filter: hue-rotate(360deg); } }",
+      "duration": "16s",
+      "timing": "linear"
+    },
+    "rgbBorderGlow": {
+      "name": "rgb-border-glow",
+      "css": "@keyframes rgb-border-glow { 0% { border-color: rgba(255,110,180,0.4); box-shadow: 0 0 20px rgba(255,110,180,0.2); } 14% { border-color: rgba(255,107,107,0.4); box-shadow: 0 0 20px rgba(255,107,107,0.2); } 28% { border-color: rgba(255,215,0,0.4); box-shadow: 0 0 20px rgba(255,215,0,0.2); } 42% { border-color: rgba(85,239,196,0.4); box-shadow: 0 0 20px rgba(85,239,196,0.2); } 57% { border-color: rgba(116,185,255,0.4); box-shadow: 0 0 20px rgba(116,185,255,0.2); } 71% { border-color: rgba(162,155,254,0.4); box-shadow: 0 0 20px rgba(162,155,254,0.2); } 85% { border-color: rgba(253,121,168,0.4); box-shadow: 0 0 20px rgba(253,121,168,0.2); } 100% { border-color: rgba(255,110,180,0.4); box-shadow: 0 0 20px rgba(255,110,180,0.2); } }",
+      "duration": "16s",
+      "timing": "linear"
+    }
+  },
+
+  "customCSS": [
+    "body::before { background: linear-gradient(135deg, #060608, #0a0818, #080616, #060608); opacity: 1 !important; }",
+    ".logo-main h1 { animation: rgb-hue-rotate 16s linear infinite; }",
+    ".launch-btn { animation: rgb-border-glow 16s linear infinite; }",
+    ".nav-btn.active { animation: rgb-border-glow 16s linear infinite; }",
+    ".version-card.selected { animation: rgb-border-glow 16s linear infinite; }",
+    "::-webkit-scrollbar-thumb { animation: rgb-border-glow 16s linear infinite; }",
+    "::selection { background: rgba(162,155,254,0.3); color: #060608; }",
+    ".page-header h2 { animation: rgb-hue-rotate 16s linear infinite; }",
+    "#sidebar { border-right: 1px solid; animation: rgb-border-glow 16s linear infinite; }"
+  ]
+}

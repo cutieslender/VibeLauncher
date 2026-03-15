@@ -1,0 +1,90 @@
+{
+  "id": "cyberpunk",
+  "name": "Cyberpunk",
+  "description": "Jaune toxique sur fond sombre — style Night City avec glitchs et distorsions",
+  "author": "VibeLauncher",
+  "version": "1.0.0",
+  
+  "colors": {
+    "bg": "#0a0a12",
+    "surface": "rgba(15, 12, 25, 0.95)",
+    "surface2": "rgba(22, 18, 38, 0.90)",
+    "surface3": "rgba(30, 25, 50, 0.90)",
+    "border": "rgba(252, 225, 0, 0.15)",
+    "accent": "#fce100",
+    "accent2": "#ccb400",
+    "accent3": "#fff066",
+    "green": "#00ff9f",
+    "gold": "#fce100",
+    "red": "#ff003c",
+    "orange": "#ff6b00",
+    "text": "#e8e0f0",
+    "text2": "#a89cc0",
+    "text3": "#5a4e70",
+    "forge": "#ff6b00",
+    "fabric": "#fce100",
+    "glow": "0 0 25px rgba(252, 225, 0, 0.3)",
+    "glow_strong": "0 0 50px rgba(252, 225, 0, 0.5)"
+  },
+
+  "rgb": { "r": 252, "g": 225, "b": 0 },
+
+  "background": {
+    "type": "gradient-animated",
+    "gradient": "linear-gradient(135deg, #0a0a12 0%, #12081e 30%, #180a28 60%, #0a0a12 100%)",
+    "particles": {
+      "enabled": true,
+      "type": "grid-lines",
+      "color": "rgba(252, 225, 0, 0.06)",
+      "count": 15,
+      "speed": 0.2
+    },
+    "overlay": "linear-gradient(180deg, transparent 0%, rgba(252,225,0,0.02) 50%, transparent 100%)"
+  },
+
+  "effects": {
+    "glassmorphism": true,
+    "blur": "10px",
+    "borderGlow": true,
+    "hoverScale": 1.02,
+    "transitionSpeed": "0.2s",
+    "scrollbarColor": "rgba(252, 225, 0, 0.4)",
+    "selectionBg": "rgba(252, 225, 0, 0.3)",
+    "selectionColor": "#0a0a12"
+  },
+
+  "sidebar": {
+    "background": "rgba(8, 6, 15, 0.8)",
+    "activeGlow": "inset 0 0 25px rgba(252, 225, 0, 0.08)",
+    "hoverBorder": "rgba(252, 225, 0, 0.35)",
+    "logoShadow": "0 0 35px rgba(252, 225, 0, 0.8)"
+  },
+
+  "animations": {
+    "glitch": {
+      "name": "cyber-glitch",
+      "css": "@keyframes cyber-glitch { 0%, 90%, 100% { transform: none; opacity: 1; } 92% { transform: translate(-2px, 1px) skewX(-1deg); opacity: 0.9; } 94% { transform: translate(2px, -1px) skewX(1deg); opacity: 0.85; } 96% { transform: translate(-1px, 2px); opacity: 0.95; } }",
+      "duration": "4s",
+      "timing": "steps(1)"
+    },
+    "scanline": {
+      "name": "cyber-scanline",
+      "css": "@keyframes cyber-scanline { 0% { transform: translateY(-100vh); } 100% { transform: translateY(100vh); } }",
+      "duration": "8s",
+      "timing": "linear"
+    }
+  },
+
+  "customCSS": [
+    "body::before { background: linear-gradient(135deg, #0a0a12, #12081e, #180a28, #0a0a12); background-size: 400% 400%; animation: astolfo-bg-shimmer 20s ease-in-out infinite; opacity: 1 !important; }",
+    "body::after { content: ''; position: fixed; inset: 0; background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(252,225,0,0.01) 2px, rgba(252,225,0,0.01) 4px); pointer-events: none; z-index: 0; }",
+    ".logo-main h1 { animation: cyber-glitch 4s steps(1) infinite; color: #fce100 !important; }",
+    ".launch-btn { border-color: rgba(252,225,0,0.5) !important; font-family: 'Share Tech Mono', monospace !important; text-transform: uppercase !important; letter-spacing: 3px !important; }",
+    ".launch-btn:hover { background: rgba(252,225,0,0.15) !important; box-shadow: 0 0 30px rgba(252,225,0,0.3), 0 0 5px rgba(255,0,60,0.2) !important; }",
+    ".version-card.selected { border-color: #fce100 !important; box-shadow: 0 0 25px rgba(252,225,0,0.35) !important; }",
+    "::selection { background: rgba(252,225,0,0.3); color: #0a0a12; }",
+    "::-webkit-scrollbar-thumb { background: rgba(252,225,0,0.3) !important; }",
+    ".page-header h2 { color: #fce100 !important; text-shadow: 0 0 25px rgba(252,225,0,0.5), 2px 2px 0 rgba(255,0,60,0.2) !important; font-family: 'Share Tech Mono', monospace !important; }",
+    ".nav-btn.active { background: rgba(252,225,0,0.1) !important; border-color: rgba(252,225,0,0.4) !important; color: #fce100 !important; border-left: 2px solid #ff003c !important; }"
+  ]
+}

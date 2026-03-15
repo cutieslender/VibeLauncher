@@ -1,0 +1,111 @@
+{
+  "id": "astolfo",
+  "name": "Astolfo ♡",
+  "description": "Un thème rose et violet inspiré d'Astolfo — doux, lumineux et plein de charme",
+  "author": "VibeLauncher",
+  "version": "1.0.0",
+  
+  "colors": {
+    "bg": "#120812",
+    "surface": "rgba(40, 12, 35, 0.95)",
+    "surface2": "rgba(55, 18, 48, 0.90)",
+    "surface3": "rgba(70, 25, 60, 0.90)",
+    "border": "rgba(255, 135, 200, 0.22)",
+    "accent": "#ff87c8",
+    "accent2": "#d65fa3",
+    "accent3": "#ffb8e0",
+    "green": "#ff69b4",
+    "gold": "#f0c0dd",
+    "red": "#ff4488",
+    "orange": "#ff88bb",
+    "text": "#fce4f0",
+    "text2": "#d4a0c0",
+    "text3": "#8a5070",
+    "forge": "#e07020",
+    "fabric": "#c4a020",
+    "glow": "0 0 25px rgba(255, 135, 200, 0.35)",
+    "glow_strong": "0 0 50px rgba(255, 135, 200, 0.55)"
+  },
+
+  "rgb": { "r": 255, "g": 135, "b": 200 },
+
+  "typography": {
+    "heading": "'Orbitron', 'Rajdhani', sans-serif",
+    "body": "'Rajdhani', sans-serif",
+    "mono": "'Share Tech Mono', monospace"
+  },
+
+  "background": {
+    "type": "gradient-animated",
+    "gradient": "linear-gradient(135deg, #120812 0%, #1a0520 30%, #2a0835 60%, #15061a 100%)",
+    "particles": {
+      "enabled": true,
+      "type": "hearts",
+      "color": "rgba(255, 135, 200, 0.15)",
+      "count": 20,
+      "speed": 0.3
+    },
+    "overlay": "linear-gradient(135deg, rgba(255,135,200,0.03) 0%, rgba(180,80,200,0.05) 50%, transparent 100%)"
+  },
+
+  "effects": {
+    "glassmorphism": true,
+    "blur": "12px",
+    "borderGlow": true,
+    "hoverScale": 1.02,
+    "transitionSpeed": "0.3s",
+    "scrollbarColor": "rgba(255, 135, 200, 0.4)",
+    "selectionBg": "rgba(255, 135, 200, 0.3)",
+    "selectionColor": "#fff"
+  },
+
+  "sidebar": {
+    "background": "rgba(30, 8, 25, 0.75)",
+    "activeGlow": "inset 0 0 25px rgba(255, 135, 200, 0.1)",
+    "hoverBorder": "rgba(255, 135, 200, 0.35)",
+    "logoShadow": "0 0 35px rgba(255, 135, 200, 0.8)"
+  },
+
+  "buttons": {
+    "primary": {
+      "background": "linear-gradient(135deg, rgba(255,135,200,0.2), rgba(200,80,160,0.15))",
+      "border": "rgba(255, 135, 200, 0.5)",
+      "hoverBackground": "linear-gradient(135deg, rgba(255,135,200,0.35), rgba(200,80,160,0.25))",
+      "hoverShadow": "0 0 25px rgba(255, 135, 200, 0.4)"
+    },
+    "launch": {
+      "background": "linear-gradient(135deg, rgba(255,135,200,0.15), rgba(180,80,200,0.1))",
+      "border": "rgba(255, 135, 200, 0.6)",
+      "hoverBackground": "linear-gradient(135deg, #ff87c8, #d65fa3)",
+      "hoverColor": "#120812",
+      "glowAnimation": true
+    }
+  },
+
+  "animations": {
+    "backgroundKeyframes": {
+      "name": "astolfo-bg-shimmer",
+      "css": "@keyframes astolfo-bg-shimmer { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }",
+      "duration": "15s",
+      "timing": "ease-in-out"
+    },
+    "accentPulse": {
+      "name": "astolfo-pulse",
+      "css": "@keyframes astolfo-pulse { 0%, 100% { box-shadow: 0 0 20px rgba(255,135,200,0.3); } 50% { box-shadow: 0 0 35px rgba(255,135,200,0.5); } }",
+      "duration": "3s"
+    }
+  },
+
+  "customCSS": [
+    "body::before { background: linear-gradient(135deg, #120812, #1a0520, #2a0835, #15061a); background-size: 400% 400%; animation: astolfo-bg-shimmer 15s ease-in-out infinite; opacity: 1 !important; }",
+    ".launch-btn:hover { animation: astolfo-pulse 2s ease-in-out infinite; }",
+    ".version-card.selected { border-color: #ff87c8 !important; box-shadow: 0 0 25px rgba(255,135,200,0.4), inset 0 0 15px rgba(255,135,200,0.08) !important; }",
+    "::selection { background: rgba(255,135,200,0.3); color: #fff; }",
+    "::-webkit-scrollbar-thumb { background: rgba(255,135,200,0.35) !important; border-radius: 4px; }",
+    "::-webkit-scrollbar-thumb:hover { background: rgba(255,135,200,0.6) !important; }",
+    ".card, .mod-card { backdrop-filter: blur(12px); }",
+    ".page-header h2 { color: #ff87c8 !important; text-shadow: 0 0 25px rgba(255,135,200,0.5) !important; }",
+    "#titlebar { background: rgba(18,8,18,0.97) !important; border-bottom-color: rgba(255,135,200,0.15) !important; }",
+    ".nav-btn.active { background: rgba(255,135,200,0.12) !important; border-color: rgba(255,135,200,0.45) !important; color: #ff87c8 !important; box-shadow: inset 0 0 25px rgba(255,135,200,0.08) !important; }"
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "defaultVersion": "1.21.11",
+  "defaultRam": 4,
+  "language": "fr",
+  "theme": "bleu",
+  "autoUpdate": true,
+  "javaAutoInstall": true,
+  "debugMode": false,
+  "loaderPreference": {
+    "1.9.4": "forge",
+    "1.10.2": "forge",
+    "1.11.2": "forge",
+    "1.12.2": "forge",
+    "1.14.4": "forge",
+    "1.15.2": "forge",
+    "1.16.5": "fabric",
+    "1.17.1": "fabric",
+    "1.18.2": "fabric",
+    "1.19.4": "fabric",
+    "1.20.6": "fabric",
+    "1.21.11": "fabric"
+  }
+}
