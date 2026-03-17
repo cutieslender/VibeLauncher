@@ -8,12 +8,12 @@
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
-    "build": "electron-builder",
-    "build:win": "electron-builder --win",
-    "build:linux": "electron-builder --linux deb",
-    "build:linux:appimage": "electron-builder --linux appimage",
-    "build:mac": "electron-builder --mac",
-    "build:all": "electron-builder --win --linux --mac",
+    "build": "electron-builder --publish never",
+    "build:win": "electron-builder --win --publish never",
+    "build:linux": "electron-builder --linux deb --publish never",
+    "build:linux:appimage": "electron-builder --linux appimage --publish never",
+    "build:mac": "electron-builder --mac --publish never",
+    "build:all": "electron-builder --win --linux --mac --publish never",
     "lint": "eslint src/",
     "clean": "rimraf dist/"
   },
@@ -112,7 +112,7 @@
           ]
         }
       ],
-      "icon": "build/icon.icns",
+      "icon": "build/icon.png",
       "category": "public.app-category.games",
       "hardenedRuntime": true,
       "gatekeeperAssess": false,

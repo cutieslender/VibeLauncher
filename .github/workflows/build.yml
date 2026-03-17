@@ -22,6 +22,8 @@ jobs:
     env:
       # Builds unsigned in CI by default
       CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      # Avoid electron-builder publish token errors (even if CI auto-detects publishing)
+      GH_TOKEN: ${{ github.token }}
       # Reduce noisy downloads
       ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
       ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
