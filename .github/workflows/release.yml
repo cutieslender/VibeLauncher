@@ -1,0 +1,96 @@
+name: Release (tag)
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ windows-latest, ubuntu-latest, macos-latest ]
+
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      ELECTRON_BUILDER_CACHE: ${{ github.workspace }}/.cache/electron-builder
+      ELECTRON_CACHE: ${{ github.workspace }}/.cache/electron
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Linux build deps (AppImage + deb)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y squashfs-tools ruby ruby-dev build-essential
+          sudo gem install fpm
+
+      - name: Clean dist
+        run: npm run clean
+
+      - name: Build Windows
+        if: runner.os == 'Windows'
+        run: npm run build:win
+
+      - name: Build Linux (AppImage + deb)
+        if: runner.os == 'Linux'
+        run: npm run build:linux:appimage && npm run build:linux
+
+      - name: Build macOS
+        if: runner.os == 'macOS'
+        run: npm run build:mac
+
+      - name: Upload dist as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ runner.os }}
+          path: dist/**
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    runs-on: ubuntu-latest
+    needs: [ build ]
+
+    steps:
+      - name: Download all dist artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-artifacts
+
+      - name: List files
+        run: ls -R dist-artifacts
+
+      - name: Create GitHub Release and upload assets
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            dist-artifacts/**/dist/**/*.exe
+            dist-artifacts/**/dist/**/*.exe.blockmap
+            dist-artifacts/**/dist/**/*.yml
+            dist-artifacts/**/dist/**/*.AppImage
+            dist-artifacts/**/dist/**/*.deb
+            dist-artifacts/**/dist/**/*.dmg
+

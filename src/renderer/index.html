@@ -45,7 +45,8 @@ body::before {
   content: '';
   position: fixed;
   inset: 0;
-  background-image: url('../../assets/backgrounds/default.png');
+  /* Fallback par défaut (fichier à la racine du projet) */
+  background-image: url('../../background.png');
   background-size: cover;
   background-position: center;
   opacity: 0.45;
@@ -597,6 +598,80 @@ input[type=range]::-webkit-slider-thumb {
   cursor: not-allowed;
   transform: none;
 }
+
+/* MUSIC EMBEDS */
+.music-panel {
+  width: 100%;
+  max-width: 560px;
+  background: rgba(20,20,20,0.8);
+  border: 1px solid var(--border);
+  padding: 15px;
+  border-radius: 15px;
+}
+.spotify, .soundcloud { margin-top: 10px; }
+.music-embed-title {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: 'Share Tech Mono', monospace;
+  margin-bottom: 10px;
+}
+
+/* GLOBAL MINI EMBEDS (Spotify / SoundCloud) */
+#global-embeds {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 9999;
+  width: 340px;
+  background: rgba(10,14,20,0.78);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 0 25px rgba(0,0,0,0.35);
+  backdrop-filter: blur(10px);
+  overflow: hidden;
+}
+#global-embeds.collapsed {
+  width: auto;
+  background: rgba(10,14,20,0.55);
+}
+#global-embeds .ge-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+#global-embeds.collapsed .ge-head { border-bottom: none; }
+#global-embeds .ge-title {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px;
+  color: var(--text3);
+  letter-spacing: 0.4px;
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#global-embeds .ge-tabs { display: flex; gap: 6px; }
+.ge-tab, .ge-btn {
+  border: 1px solid rgba(255,255,255,0.10);
+  background: rgba(255,255,255,0.04);
+  color: var(--text2);
+  border-radius: 10px;
+  font-size: 11px;
+  padding: 5px 9px;
+  cursor: pointer;
+  user-select: none;
+}
+.ge-tab.active {
+  border-color: rgba(0,212,255,0.35);
+  color: var(--accent);
+  background: rgba(0,212,255,0.08);
+}
+.ge-btn:hover, .ge-tab:hover { border-color: rgba(255,255,255,0.18); }
+#global-embeds .ge-body { padding: 8px 10px 10px; }
+#global-embeds.collapsed .ge-body { display: none; }
+#global-embeds iframe { width: 100%; border: 0; border-radius: 12px; }
 
 /* Console */
 .console-box {
@@ -3456,11 +3531,58 @@ input[type=range]::-webkit-slider-thumb {
 
 <div id="notification"></div>
 
+  <!-- Global mini embeds: visible partout, repliable -->
+  <div id="global-embeds" class="collapsed">
+    <div class="ge-head">
+      <div class="ge-title">🎧 Embeds</div>
+      <div class="ge-tabs">
+        <div class="ge-tab active" id="ge-tab-spotify" onclick="geShow('spotify')">Spotify</div>
+        <div class="ge-tab" id="ge-tab-soundcloud" onclick="geShow('soundcloud')">SC</div>
+      </div>
+      <div class="ge-btn" id="ge-toggle" onclick="geToggle()">▢</div>
+    </div>
+    <div class="ge-body">
+      <div id="ge-spotify">
+        <iframe
+          data-testid="embed-iframe"
+          src="https://open.spotify.com/embed/artist/5JZISglhnxK18pYMgX56Ox?utm_source=generator"
+          height="80"
+          allowfullscreen=""
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"></iframe>
+      </div>
+      <div id="ge-soundcloud" style="display:none;">
+        <iframe
+          scrolling="no"
+          frameborder="no"
+          allow="autoplay"
+          src="https://w.soundcloud.com/player/?url=https%3A%2F%2Fapi.soundcloud.com%2Fusers%2Fsoundcloud%253Ausers%253A1452747094"
+          height="90"></iframe>
+      </div>
+    </div>
+  </div>
+
 <script>
 // VibeLauncher v2: API accessible via window.vibe (preload.js bridge)
 const vibe = window.vibe;
 // Backward compatibility: ipcRenderer still available during transition
 const { ipcRenderer } = require('electron');
+
+// ==================== I18N SAFE FALLBACK ====================
+// `t()` est utilisé partout (UI + launch). On le définit dès le début pour éviter
+// qu'un souci de langue bloque le lancement du jeu.
+let currentLang = (window.currentLang === 'en' || window.currentLang === 'fr') ? window.currentLang : 'fr';
+window.currentLang = currentLang;
+function t(key) {
+  try {
+    const store = window.I18N;
+    const lang = window.currentLang || 'fr';
+    const dict = (store && store[lang]) || (store && store.fr);
+    if (dict && Object.prototype.hasOwnProperty.call(dict, key)) return dict[key];
+  } catch { /* ignore */ }
+  return key;
+}
+window.t = t;
 
 // ==================== DATA ====================
 const VERSIONS_DATA = {
@@ -3794,45 +3916,59 @@ function toggleModFull(ver, idx) {
 
 // ==================== LAUNCH ====================
 async function launchGame() {
-  const username = document.getElementById('username').value.trim();
-  // Si compte Microsoft connecté, pas besoin de pseudo
-  const msAccount = await ipcRenderer.invoke('ms-get-account');
-  if (!username && !msAccount) { notify('Entre ton pseudo Minecraft !', true); return; }
-  if (!selectedVersion) { notify('Sélectionne une version !', true); return; }
-  if (!gameDir) { notify('Configure le dossier Minecraft dans Paramètres !', true); return; }
+  try {
+    const username = document.getElementById('username').value.trim();
+    // Si compte Microsoft connecté, pas besoin de pseudo
+    const msAccount = await ipcRenderer.invoke('ms-get-account');
+    if (!username && !msAccount) { notify('Entre ton pseudo Minecraft !', true); return; }
+    if (!selectedVersion) { notify('Sélectionne une version !', true); return; }
+    if (!gameDir) { notify('Configure le dossier Minecraft dans Paramètres !', true); return; }
 
-  const ram = parseInt(document.getElementById('ramSlider').value) || 4;
-  const data = VERSIONS_DATA[selectedVersion];
+    const ram = parseInt(document.getElementById('ramSlider').value) || 4;
+    const data = VERSIONS_DATA[selectedVersion];
 
-  const btn = document.getElementById('launchBtn');
-  btn.disabled = true;
-  btn.querySelector('[data-i18n]') ? btn.querySelector('[data-i18n]').textContent = t('js_launching') : btn.textContent = t('js_launching');
+    const btn = document.getElementById('launchBtn');
+    btn.disabled = true;
+    btn.querySelector('[data-i18n]') ? btn.querySelector('[data-i18n]').textContent = t('js_launching') : btn.textContent = t('js_launching');
 
-  // Utiliser le nom du compte MS si connecté
-  const effectiveUsername = msAccount ? msAccount.name : username;
+    // Utiliser le nom du compte MS si connecté
+    const effectiveUsername = msAccount ? msAccount.name : username;
 
-  // Vider la console et afficher infos de lancement
-  document.getElementById('console').innerHTML = '';
-  log('> VibeLauncher - Démarrage...');
-  log('> Version : ' + selectedVersion + ' [' + data.loader.toUpperCase() + ']');
-  log('> Joueur  : ' + effectiveUsername);
-  log('> RAM     : ' + ram + ' Go');
-  log('> Mods actifs : ' + data.mods.filter(m => m.enabled).length + '/' + data.mods.length);
-  log('> Dossier : ' + gameDir);
+    // Vider la console et afficher infos de lancement
+    document.getElementById('console').innerHTML = '';
+    log('> VibeLauncher - Démarrage...');
+    log('> Version : ' + selectedVersion + ' [' + data.loader.toUpperCase() + ']');
+    log('> Joueur  : ' + effectiveUsername);
+    log('> RAM     : ' + ram + ' Go');
+    log('> Mods actifs : ' + data.mods.filter(m => m.enabled).length + '/' + data.mods.length);
+    log('> Dossier : ' + gameDir);
 
-  document.getElementById('progressWrap').classList.add('visible');
-  document.getElementById('progressBar').style.width = '0%';
+    document.getElementById('progressWrap').classList.add('visible');
+    document.getElementById('progressBar').style.width = '0%';
 
-  startSession(selectedVersion);
-  ipcRenderer.send('launch-minecraft', {
-    username: effectiveUsername,
-    version: selectedVersion,
-    gameDir,
-    ram,
-    mods: data.mods,
-    loaderType: data.loader
-  });
+    startSession(selectedVersion);
+    ipcRenderer.send('launch-minecraft', {
+      username: effectiveUsername,
+      version: selectedVersion,
+      gameDir,
+      ram,
+      mods: data.mods,
+      loaderType: data.loader
+    });
+  } catch (err) {
+    try { log('> Erreur JS: ' + (err && err.message ? err.message : String(err)), 'error'); } catch { /* ignore */ }
+    try { notify('Erreur: ' + (err && err.message ? err.message : String(err)), true); } catch { /* ignore */ }
+    const btn = document.getElementById('launchBtn');
+    if (btn) {
+      btn.disabled = false;
+      btn.querySelector('[data-i18n]') ? btn.querySelector('[data-i18n]').textContent = t('js_launch') : btn.textContent = t('js_launch');
+    }
+    try { document.getElementById('progressWrap').classList.remove('visible'); } catch { /* ignore */ }
+  }
 }
+
+// Assurer que l'handler inline `onclick="launchGame()"` pointe toujours sur une fonction globale
+window.launchGame = launchGame;
 
 // ==================== CONSOLE ====================
 function copyConsole() {
@@ -5530,6 +5666,21 @@ const WALLPAPERS = [
   { id:'default',   label:'Défaut',           url:'background.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
   { id:'none',      label:'Aucun',            url:'',               gradient:'linear-gradient(135deg,#080b0f,#0d1117)' },
 
+  // === BACKGROUNDS (assets/backgrounds) ===
+  { id:'bg10', label:'🖼️ Background 10', url:'../../assets/backgrounds/backgrounder_10.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg11', label:'🖼️ Background 11', url:'../../assets/backgrounds/backgrounder_11.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg14', label:'🖼️ Background 14', url:'../../assets/backgrounds/backgrounder_14.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg15', label:'🖼️ Background 15', url:'../../assets/backgrounds/backgrounder_15.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg16', label:'🖼️ Background 16', url:'../../assets/backgrounds/backgrounder_16.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg17', label:'🖼️ Background 17', url:'../../assets/backgrounds/backgrounder_17.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg18', label:'🖼️ Background 18', url:'../../assets/backgrounds/backgrounder_18.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg19', label:'🖼️ Background 19', url:'../../assets/backgrounds/backgrounder_19.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg20', label:'🖼️ Background 20', url:'../../assets/backgrounds/backgrounder_20.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg22', label:'🖼️ Background 22', url:'../../assets/backgrounds/backgrounder_22.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg23', label:'🖼️ Background 23', url:'../../assets/backgrounds/backgrounder_23.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg24', label:'🖼️ Background 24', url:'../../assets/backgrounds/backgrounder_24.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+  { id:'bg25', label:'🖼️ Background 25', url:'../../assets/backgrounds/backgrounder_25.png', gradient:'linear-gradient(135deg,#0d1117,#161b22)' },
+
   // === AMBIANCE ANIME / FEMBOY ===
   { id:'sakura',    label:'🌸 Sakura Rose',   url:'', gradient:'linear-gradient(135deg,#2a0015,#5a1040,#ff69b4,#ffb6c1,#ffe4f0)' },
   { id:'pastel1',   label:'🍬 Candy Pastel',  url:'', gradient:'linear-gradient(135deg,#ff9ff3,#ffd3f0,#ffeaf8,#d4b3ff,#b3d4ff)' },
@@ -5638,6 +5789,7 @@ function renderWallpaperGrid() {
   // Grouper par catégorie
   const cats = [
     { label:'⚙️ Général', ids:['default','none'] },
+    { label:'🖼️ Backgrounds', ids:['bg10','bg11','bg14','bg15','bg16','bg17','bg18','bg19','bg20','bg22','bg23','bg24','bg25'] },
     { label:'🌸 Ambiance Anime & Pastel', ids:['sakura','pastel1','kawaii','ribbon','softblue','lilac','catears','blushpink','bubblegum','neonpink','icecream','dreamy'] },
     { label:'🌙 Ambiance Nuit & Espace', ids:['moonlight','animedusk','softnight','galaxy','lofi','synthwave','animesun','clouds'] },
     { label:'🌿 Nature & Saisons', ids:['midori','cottagecore','spring','sunset2','aqua'] },
@@ -5649,23 +5801,28 @@ function renderWallpaperGrid() {
     html += `<div style="grid-column:1/-1;font-size:10px;color:var(--text3);font-family:'Share Tech Mono',monospace;margin-top:10px;margin-bottom:6px;padding-bottom:6px;border-bottom:1px solid var(--border);">${cat.label}</div>`;
     cat.ids.forEach(id => {
       const wp = WALLPAPERS.find(w=>w.id===id); if(!wp)return;
-      const previewCanvas = document.createElement('canvas');
-      previewCanvas.width = 160; previewCanvas.height = 90;
-      const pctx = previewCanvas.getContext('2d');
-      try {
-        const colors = wp.gradient.replace(/linear-gradient\([^,]+,/,'').replace(/\)$/,'').split(',').map(c=>c.trim());
-        const isVertical = wp.gradient.includes('180deg');
-        const g = isVertical ? pctx.createLinearGradient(0,0,0,90) : pctx.createLinearGradient(0,0,160,90);
-        colors.forEach((c,i) => { try{g.addColorStop(i/(colors.length-1||1),c);}catch(e){} });
-        pctx.fillStyle = g; pctx.fillRect(0,0,160,90);
-      } catch(e) { pctx.fillStyle='#0d1117';pctx.fillRect(0,0,160,90); }
-      if (WP_CANVAS_EFFECTS[id]) { try{WP_CANVAS_EFFECTS[id](pctx);}catch(e){} }
-      // Overlay texture subtile
-      pctx.fillStyle='rgba(0,0,0,0.1)';
-      for(let y=0;y<90;y+=4){pctx.fillRect(0,y,160,1);}
-      const dataUrl = previewCanvas.toDataURL();
+      let previewHtml = '';
+      if (wp.url) {
+        previewHtml = `<img src="${wp.url}" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+      } else {
+        const previewCanvas = document.createElement('canvas');
+        previewCanvas.width = 160; previewCanvas.height = 90;
+        const pctx = previewCanvas.getContext('2d');
+        try {
+          const colors = wp.gradient.replace(/linear-gradient\([^,]+,/,'').replace(/\)$/,'').split(',').map(c=>c.trim());
+          const isVertical = wp.gradient.includes('180deg');
+          const g = isVertical ? pctx.createLinearGradient(0,0,0,90) : pctx.createLinearGradient(0,0,160,90);
+          colors.forEach((c,i) => { try{g.addColorStop(i/(colors.length-1||1),c);}catch(e){} });
+          pctx.fillStyle = g; pctx.fillRect(0,0,160,90);
+        } catch(e) { pctx.fillStyle='#0d1117';pctx.fillRect(0,0,160,90); }
+        if (WP_CANVAS_EFFECTS[id]) { try{WP_CANVAS_EFFECTS[id](pctx);}catch(e){} }
+        // Overlay texture subtile
+        pctx.fillStyle='rgba(0,0,0,0.1)';
+        for(let y=0;y<90;y+=4){pctx.fillRect(0,y,160,1);}
+        previewHtml = `<img src="${previewCanvas.toDataURL()}" style="width:100%;height:100%;object-fit:cover;display:block;">`;
+      }
       html += `<div class="wallpaper-card ${id===currentWallpaper?'active':''}" id="wp-${id}" onclick="applyWallpaper('${id}')">
-        <img src="${dataUrl}" style="width:100%;height:100%;object-fit:cover;display:block;">
+        ${previewHtml}
         <div class="wp-label">${wp.label}</div>
         <div class="wp-check">✓</div>
       </div>`;
@@ -5675,7 +5832,7 @@ function renderWallpaperGrid() {
 }
 
 // ==================== LANGUE FR / EN ====================
-const I18N = {
+window.I18N = {
   fr: {
     nav_play:'Jouer', nav_mods:'Mods', nav_settings:'Paramètres', nav_community:'Communauté',
     nav_servers:'Serveurs', nav_credits:'Remerciements', nav_changelog:'Changelog',
@@ -5834,7 +5991,9 @@ const I18N = {
   }
 };
 
-let currentLang = 'fr';
+// `currentLang` est initialisé en haut du script; on garde ici juste une resync.
+currentLang = (window.currentLang === 'en' || window.currentLang === 'fr') ? window.currentLang : currentLang;
+window.currentLang = currentLang;
 
 function applyLang() {
   const L = I18N[currentLang];
@@ -5894,6 +6053,30 @@ function loadLang() {
 }
 
 
+
+// ==================== GLOBAL EMBEDS ====================
+function geToggle() {
+  const root = document.getElementById('global-embeds');
+  if (!root) return;
+  root.classList.toggle('collapsed');
+}
+
+function geShow(which) {
+  const sp = document.getElementById('ge-spotify');
+  const sc = document.getElementById('ge-soundcloud');
+  const tsp = document.getElementById('ge-tab-spotify');
+  const tsc = document.getElementById('ge-tab-soundcloud');
+  if (!sp || !sc || !tsp || !tsc) return;
+
+  const isSpotify = which === 'spotify';
+  sp.style.display = isSpotify ? '' : 'none';
+  sc.style.display = isSpotify ? 'none' : '';
+  tsp.classList.toggle('active', isSpotify);
+  tsc.classList.toggle('active', !isSpotify);
+}
+
+window.geToggle = geToggle;
+window.geShow = geShow;
 
 // ==================== FROGGER ====================
 let froggerRAF;

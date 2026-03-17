@@ -1,54 +1,34 @@
 {
   "name": "vibelauncher",
-<<<<<<< HEAD
-  "version": "1.0.0",
-  "description": "VibeLauncher - Minecraft Launcher",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron .",
-=======
   "version": "2.0.0",
   "description": "VibeLauncher — Minecraft Launcher Custom avec thèmes, mods et mini-jeux",
+  "license": "MIT",
+  "author": "BroSyo_o & Loona Femboy <contact@globaleurope.fr>",
   "main": "src/main/main.js",
   "scripts": {
     "start": "electron .",
     "dev": "electron . --dev",
->>>>>>> 1e25cea (Try to Build Failed So Sharing for Fixings)
     "build": "electron-builder",
     "build:win": "electron-builder --win",
-    "build:linux": "electron-builder --linux",
+    "build:linux": "electron-builder --linux deb",
+    "build:linux:appimage": "electron-builder --linux appimage",
     "build:mac": "electron-builder --mac",
-<<<<<<< HEAD
-    "build:all": "electron-builder --win --linux --mac"
-=======
     "build:all": "electron-builder --win --linux --mac",
     "lint": "eslint src/",
     "clean": "rimraf dist/"
->>>>>>> 1e25cea (Try to Build Failed So Sharing for Fixings)
   },
   "dependencies": {
-    "minecraft-launcher-core": "^3.8.0",
-    "fs-extra": "^11.1.1"
+    "fs-extra": "^11.1.1",
+    "minecraft-launcher-core": "^3.8.0"
   },
   "devDependencies": {
     "electron": "^28.0.0",
-<<<<<<< HEAD
-    "electron-builder": "^24.6.4"
-=======
     "electron-builder": "^24.6.4",
     "rimraf": "^5.0.0"
->>>>>>> 1e25cea (Try to Build Failed So Sharing for Fixings)
   },
   "build": {
     "appId": "com.vibelauncher.app",
     "productName": "VibeLauncher",
-<<<<<<< HEAD
-    "icon": "icon.png",
-    "files": [
-      "**/*",
-      "!node_modules/.cache"
-    ],
-=======
     "copyright": "Copyright © 2024 VibeLauncher",
     "directories": {
       "output": "dist",
@@ -65,7 +45,9 @@
       {
         "from": "src/themes",
         "to": "themes",
-        "filter": ["*.json"]
+        "filter": [
+          "*.json"
+        ]
       }
     ],
     "asar": true,
@@ -73,95 +55,61 @@
       "mods/**/*"
     ],
     "compression": "maximum",
-
->>>>>>> 1e25cea (Try to Build Failed So Sharing for Fixings)
     "win": {
       "target": [
         {
           "target": "nsis",
-<<<<<<< HEAD
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
           "arch": [
             "x64"
           ]
         }
       ],
-      "icon": "icon.ico"
-    },
-=======
-          "arch": ["x64"]
-        },
-        {
-          "target": "portable",
-          "arch": ["x64"]
-        }
-      ],
-      "icon": "build/icon.ico",
+      "icon": "build/icon.png",
       "artifactName": "VibeLauncher-${version}-win-${arch}.${ext}"
     },
-
->>>>>>> 1e25cea (Try to Build Failed So Sharing for Fixings)
     "linux": {
       "target": [
         {
           "target": "AppImage",
-<<<<<<< HEAD
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "deb",
           "arch": [
             "x64"
           ]
         }
       ],
-      "icon": "icon.ico",
-      "category": "Game"
-    },
-=======
-          "arch": ["x64"]
-        },
-        {
-          "target": "deb",
-          "arch": ["x64"]
-        }
-      ],
+      "maintainer": "BroSyo_o & Loona Femboy <contact@globaleurope.fr>",
       "icon": "build/icons",
       "category": "Game",
       "desktop": {
-        "Name": "VibeLauncher",
-        "Comment": "Minecraft Launcher Custom",
-        "Terminal": "false",
-        "Type": "Application",
-        "Categories": "Game;"
+        "entry": {
+          "Name": "VibeLauncher",
+          "Comment": "Minecraft Launcher Custom",
+          "Terminal": "false",
+          "Type": "Application",
+          "Categories": "Game;"
+        }
       },
       "artifactName": "VibeLauncher-${version}-linux-${arch}.${ext}"
     },
-
->>>>>>> 1e25cea (Try to Build Failed So Sharing for Fixings)
     "mac": {
       "target": [
         {
           "target": "dmg",
-<<<<<<< HEAD
           "arch": [
             "x64",
             "arm64"
           ]
-        }
-      ],
-      "icon": "icon.ico",
-      "category": "public.app-category.games"
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "installerIcon": "icon.ico",
-      "uninstallerIcon": "icon.ico",
-      "installerHeaderIcon": "icon.ico",
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "VibeLauncher"
-    }
-  }
-}
-=======
-          "arch": ["x64", "arm64"]
         }
       ],
       "icon": "build/icon.icns",
@@ -172,15 +120,24 @@
       "entitlementsInherit": "build/entitlements.mac.plist",
       "artifactName": "VibeLauncher-${version}-mac-${arch}.${ext}"
     },
-
     "dmg": {
       "contents": [
-        { "x": 130, "y": 220 },
-        { "x": 410, "y": 220, "type": "link", "path": "/Applications" }
+        {
+          "x": 130,
+          "y": 220
+        },
+        {
+          "x": 410,
+          "y": 220,
+          "type": "link",
+          "path": "/Applications"
+        }
       ],
-      "window": { "width": 540, "height": 380 }
+      "window": {
+        "width": 540,
+        "height": 380
+      }
     },
-
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
@@ -192,7 +149,6 @@
       "shortcutName": "VibeLauncher",
       "license": "LICENSE"
     },
-
     "deb": {
       "depends": [
         "libnotify4",
@@ -203,4 +159,3 @@
     }
   }
 }
->>>>>>> 1e25cea (Try to Build Failed So Sharing for Fixings)
