@@ -43,6 +43,8 @@ const vibeAPI = {
   utils: {
     openPath: (p) => ipcRenderer.send('open-path', p),
     openUrl: (url) => ipcRenderer.send('open-url', url),
+    /** Ouvre le puzzle Chess.com dans une fenêtre du launcher */
+    openChessWindow: () => ipcRenderer.send('open-chess-window'),
   },
   platform: process.platform,
 };

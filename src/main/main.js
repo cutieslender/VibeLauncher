@@ -11,7 +11,7 @@
  * ✓ Détection Java multiplateforme
  */
 
-const { app, BrowserWindow, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, BrowserView, ipcMain, dialog, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const https = require('https');
@@ -23,12 +23,19 @@ const { Client } = require('minecraft-launcher-core');
 // Modules refactorisés
 const platform = require('./core/platform');
 const storage = require('./core/storage');
+const discordRpc = require('./discordRpc');
 
 // ==================== CONFIG ====================
 
 const MS_CLIENT_ID = '00000000402b5328';
 let msAuthAccount = null;
 let mainWindow = null;
+/** Fenêtre dédiée Chess.com (selon le cas, l’intégration en cadre peut être bloquée) */
+let chessWindow = null;
+let chessView = null;
+let chessViewActive = false;
+
+const CHESS_DAILY_URL = 'https://www.chess.com/daily-chess-puzzle';
 
 const FORGE_VERSIONS = {
   '1.9.4':  '1.9.4-12.17.0.2317-1.9.4',
@@ -65,6 +72,10 @@ function createWindow() {
       // quand toutes les références require() dans index.html seront migrées vers vibe.*
       nodeIntegration: true,
       contextIsolation: false,
+      // Permet de charger correctement certains iframes/ressources externes (ex: embeds externes)
+      webSecurity: false,
+      // Permet d'utiliser <webview> côté renderer (pas d'iframe pour certains sites)
+      webviewTag: true,
       preload: path.join(__dirname, 'preload.js'),
     },
     show: false,
@@ -74,7 +85,16 @@ function createWindow() {
   mainWindow.once('ready-to-show', () => mainWindow.show());
 }
 
-app.whenReady().then(createWindow);
+app.whenReady().then(async () => {
+  createWindow();
+  try {
+    await discordRpc.initDiscordRpc();
+    discordRpc.setMenuPresence().catch(() => {});
+  } catch (e) {
+    // RPC ne doit jamais casser l'app
+    console.warn('[discord-rpc] init failed:', e && e.message ? e.message : e);
+  }
+});
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
@@ -369,8 +389,178 @@ ipcMain.handle('cleaner-delete-async', async (_, files) => {
 
 // ==================== UTILS ====================
 
-ipcMain.on('open-path', (_, p) => shell.openPath(p));
-ipcMain.on('open-url', (_, url) => shell.openExternal(url));
+ipcMain.on('open-path', (_, p) => {
+  try {
+    shell.openPath(p);
+  } catch (e) {
+    console.error('open-path:', e);
+  }
+});
+
+ipcMain.on('open-url', async (_, url) => {
+  if (!url || typeof url !== 'string') return;
+  try {
+    await shell.openExternal(url);
+  } catch (e) {
+    console.error('open-url:', e);
+  }
+});
+
+/** Puzzle du jour Chess.com dans une vraie fenêtre */
+ipcMain.on('open-chess-window', () => {
+  const chessUrl = 'https://www.chess.com/daily-chess-puzzle';
+  try {
+    if (chessWindow && !chessWindow.isDestroyed()) {
+      chessWindow.focus();
+      chessWindow.loadURL(chessUrl);
+      return;
+    }
+    chessWindow = new BrowserWindow({
+      show: false,
+      width: 960,
+      height: 820,
+      minWidth: 640,
+      minHeight: 520,
+      parent: mainWindow || undefined,
+      title: 'Chess.com — Puzzle du jour',
+      backgroundColor: '#161512',
+      icon: path.join(__dirname, '..', '..', 'build', platform.IS_WIN ? 'icon.ico' : 'icon.png'),
+      backgroundThrottling: false,
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        // Idem iframe : on désactive la sécurité réseau dans cette fenêtre dédiée
+        // pour éviter les pages blanches si des ressources sont bloquées.
+        webSecurity: false,
+        sandbox: false,
+      },
+    });
+    chessWindow.once('ready-to-show', () => {
+      try { chessWindow.show(); } catch { /* ignore */ }
+    });
+    chessWindow.webContents.on('did-finish-load', () => {
+      console.log('[chessWindow] did-finish-load');
+    });
+    chessWindow.webContents.on('did-fail-load', (e, code, desc, url) => {
+      console.error('[chessWindow] did-fail-load', { code, desc, url });
+    });
+    chessWindow.loadURL(chessUrl);
+    chessWindow.on('closed', () => {
+      chessWindow = null;
+    });
+  } catch (e) {
+    console.error('open-chess-window:', e);
+    shell.openExternal(chessUrl).catch(() => {});
+  }
+});
+
+// ==================== CHESS.COM in main window (BrowserView) ====================
+ipcMain.on('chess-view-show', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  try {
+    if (!chessView) {
+      chessView = new BrowserView({
+        webPreferences: {
+          nodeIntegration: false,
+          contextIsolation: true,
+          webSecurity: false,
+        },
+      });
+      chessView.webContents.on('did-finish-load', () => {
+        console.log('[chess-view] did-finish-load');
+      });
+      chessView.webContents.on('did-fail-load', (e, code, desc, url) => {
+        console.error('[chess-view] did-fail-load', { code, desc, url });
+      });
+    }
+
+    // Monte / remonte le BrowserView
+    mainWindow.setBrowserView(chessView);
+
+    const bounds = mainWindow.getContentBounds();
+    chessView.setBounds({ x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height });
+    chessView.setAutoResize({ width: true, height: true });
+
+    if (!chessView.webContents.getURL() || chessView.webContents.getURL() === 'about:blank') {
+      chessView.webContents.loadURL(CHESS_DAILY_URL).catch(() => {});
+    }
+
+    chessViewActive = true;
+  } catch (e) {
+    console.error('[chess-view-show] failed:', e);
+  }
+});
+
+ipcMain.on('chess-view-hide', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  try {
+    mainWindow.setBrowserView(null);
+    chessViewActive = false;
+  } catch (e) {
+    console.error('[chess-view-hide] failed:', e);
+  }
+});
+
+// ==================== CHESS.COM modal (une seule fenêtre visible) ====================
+ipcMain.on('chess-modal-show', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  const chessUrl = 'https://www.chess.com/daily-chess-puzzle';
+  try {
+    if (chessWindow && !chessWindow.isDestroyed()) {
+      mainWindow.hide();
+      chessWindow.focus();
+      if (chessWindow.webContents.getURL() !== chessUrl) chessWindow.loadURL(chessUrl);
+      chessWindow.show();
+      return;
+    }
+
+    chessWindow = new BrowserWindow({
+      show: false,
+      width: 1100,
+      height: 820,
+      minWidth: 760,
+      minHeight: 600,
+      parent: mainWindow || undefined,
+      title: 'Chess.com — Daily Puzzle',
+      backgroundColor: '#161512',
+      icon: path.join(__dirname, '..', '..', 'build', platform.IS_WIN ? 'icon.ico' : 'icon.png'),
+      webPreferences: {
+        nodeIntegration: false,
+        contextIsolation: true,
+        webSecurity: false,
+        sandbox: false,
+      },
+    });
+
+    chessWindow.webContents.on('did-finish-load', () => {
+      console.log('[chess-modal] did-finish-load');
+    });
+    chessWindow.webContents.on('did-fail-load', (e, code, desc, url) => {
+      console.error('[chess-modal] did-fail-load', { code, desc, url });
+    });
+
+    chessWindow.on('closed', () => {
+      chessWindow = null;
+      try { mainWindow.show(); } catch { /* ignore */ }
+    });
+
+    mainWindow.hide();
+    chessWindow.loadURL(chessUrl);
+    chessWindow.once('ready-to-show', () => {
+      try { chessWindow.show(); } catch { /* ignore */ }
+    });
+  } catch (e) {
+    console.error('chess-modal-show failed:', e);
+    try { mainWindow.show(); } catch { /* ignore */ }
+    shell.openExternal(chessUrl).catch(() => {});
+  }
+});
+
+ipcMain.on('chess-modal-hide', () => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  try { chessWindow?.close(); } catch { /* ignore */ }
+  try { mainWindow.show(); } catch { /* ignore */ }
+});
 ipcMain.on('download-skin', (_, url) => {
   dialog.showSaveDialog(mainWindow, {
     title: 'Enregistrer le skin',
@@ -747,6 +937,11 @@ ipcMain.on('launch-minecraft', async (event, { username, version, gameDir, ram, 
       authorization = { access_token: uuid, client_token: uuid, uuid, name: username, user_properties: '{}' };
     }
 
+    const playerName = authorization?.name || username;
+
+    // Rich Presence : lancement (timestamp stable pour la session)
+    discordRpc.setLaunchingPresence({ version, loaderType, player: playerName }).catch(() => {});
+
     const opts = {
       authorization,
       root: gameDir,
@@ -771,13 +966,33 @@ ipcMain.on('launch-minecraft', async (event, { username, version, gameDir, ram, 
 
     launcher.on('debug', e => send(e));
     launcher.on('data', e => send(e));
+    let lastRpcProgressUpdate = 0;
     launcher.on('progress', e => {
       if (mainWindow && !mainWindow.isDestroyed())
         mainWindow.webContents.send('launch-progress', e);
+
+      // Rich Presence : progression (throttlée)
+      try {
+        if (e && typeof e.task === 'number' && typeof e.total === 'number' && e.total > 0) {
+          const pct = Math.max(0, Math.min(100, Math.round((e.task / e.total) * 100)));
+          const now = Date.now();
+          if (now - lastRpcProgressUpdate >= 3000 && ['assets', 'natives', 'assets-copy', 'classes'].includes(e.type)) {
+            lastRpcProgressUpdate = now;
+            discordRpc.setLaunchingPresence({
+              version,
+              loaderType,
+              player: playerName,
+              progress: pct,
+              phase: e.type,
+            }).catch(() => {});
+          }
+        }
+      } catch { /* ignore RPC progress */ }
     });
     launcher.on('close', code => {
       if (code === 0) send(`✓ Minecraft fermé proprement`);
       else send(`❌ Minecraft fermé avec erreur (code ${code})`);
+      discordRpc.setMenuPresence().catch(() => {});
       if (mainWindow && !mainWindow.isDestroyed())
         mainWindow.webContents.send('launch-close', code);
     });
@@ -788,17 +1003,29 @@ ipcMain.on('launch-minecraft', async (event, { username, version, gameDir, ram, 
 
     mainWindow.webContents.send('launch-started');
 
-    launcher.launch(opts).catch(err => {
-      send(`❌ Erreur lancement : ${err.message}`);
-      if (mainWindow && !mainWindow.isDestroyed())
-        mainWindow.webContents.send('launch-error', err.message);
-    });
+    launcher.launch(opts)
+      .then(() => {
+        // Une fois le process démarré, on passe en "En jeu"
+        discordRpc.setPlayingPresence({ version, loaderType, player: playerName }).catch(() => {});
+      })
+      .catch(err => {
+        send(`❌ Erreur lancement : ${err.message}`);
+        if (mainWindow && !mainWindow.isDestroyed())
+          mainWindow.webContents.send('launch-error', err.message);
+        discordRpc.setMenuPresence().catch(() => {});
+      });
 
   } catch (err) {
     send(`❌ Erreur : ${err.message}`);
     if (mainWindow && !mainWindow.isDestroyed())
       mainWindow.webContents.send('launch-error', err.message);
+    discordRpc.setMenuPresence().catch(() => {});
   }
+});
+
+// Nettoyage RPC lors de la fermeture de l'app
+app.on('before-quit', () => {
+  discordRpc.shutdownDiscordRpc().catch(() => {});
 });
 
 // ==================== BACKWARD COMPATIBILITY ====================
