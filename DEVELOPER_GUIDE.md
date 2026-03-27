@@ -197,7 +197,7 @@ Toute communication renderer ↔ main passe par `window.vibe`:
 | `vibe.themes` | `.save(id)`, `.load()` | Persistance thème |
 | `vibe.saves` | `.listWorlds(dir)`, `.backupWorld(dir, name)` | Sauvegardes |
 | `vibe.servers` | `.save(data)`, `.load()` | Serveurs |
-| `vibe.utils` | `.openPath(p)`, `.openUrl(url)` | Utilitaires |
+| `vibe.utils` | `.openPath(p)`, `.openUrl(url)`, `.openChessWindow()` | Utilitaires (Chess.com : fenêtre dédiée, pas d’iframe) |
 
 ---
 

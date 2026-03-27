@@ -2118,6 +2118,19 @@ input[type=range]::-webkit-slider-thumb {
           <div id="kiro-discord-members" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
         </div>
 
+        <!-- SERVEUR DISCORD AMÉTHYSTE (invite) -->
+        <div style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;margin-top:4px;">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+            <div style="font-size:22px;">💎</div>
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--text);">Serveur Discord — Améthyste</div>
+              <div id="amet-discord-status" style="font-size:11px;color:var(--text3);font-family:'Share Tech Mono',monospace;">Chargement...</div>
+            </div>
+            <button class="add-server-btn" style="margin-left:auto;padding:6px 14px;font-size:12px;" onclick="vibe.utils.openUrl('https://discord.gg/6r2eBCQD')">Rejoindre</button>
+          </div>
+          <div id="amet-discord-members" style="display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto;"></div>
+        </div>
+
         <div class="member-card">
           <div class="member-avatar">⚡</div>
           <div class="member-info">
@@ -2248,7 +2261,7 @@ input[type=range]::-webkit-slider-thumb {
         <div class="about-grid">
           <div class="about-item">
             <div class="about-item-label">SERVEUR</div>
-            <div class="about-item-value">play.globaleurope.fr</div>
+            <div class="about-item-value">play.vibe-craft.fr</div>
           </div>
           <div class="about-item">
             <div class="about-item-label">FONDÉ PAR</div>
@@ -2463,7 +2476,7 @@ input[type=range]::-webkit-slider-thumb {
         </div>
         <div style="margin-top:12px;display:flex;gap:10px;flex-wrap:wrap;">
           <div id="map-server-info" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2);">
-            Serveur : <span style="color:var(--accent)">play.globaleurope.fr</span>
+            Serveur : <span style="color:var(--accent)">play.vibe-craft.fr</span>
           </div>
           <div id="map-players-info" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-family:'Share Tech Mono',monospace;font-size:11px;color:var(--text2);">
             Joueurs : <span id="map-player-count" style="color:var(--green)">—</span>
@@ -2779,10 +2792,25 @@ input[type=range]::-webkit-slider-thumb {
       <div class="game-canvas-wrap"><div id="g2048-board" style="display:grid;grid-template-columns:repeat(4,80px);grid-template-rows:repeat(4,80px);gap:8px;background:var(--surface2);padding:12px;border-radius:12px;border:2px solid var(--border);"></div><button class="game-btn" onclick="g2048Start()">🔄 Nouvelle partie</button></div>
     </div>
 
-    <!-- ÉCHECS -->
+    <!-- ÉCHECS (local, sans iframe/webview) -->
     <div id="page-game-chess" class="page game-page">
-      <div class="page-header"><div><h2>♟️ ÉCHECS</h2><p>Joue contre l'IA — tu joues les blancs !</p></div><div id="chess-status-bar" style="font-family:'Share Tech Mono',monospace;font-size:12px;color:var(--accent);">À toi de jouer</div></div>
-      <div class="game-canvas-wrap"><div id="chess-board" style="display:grid;grid-template-columns:repeat(8,52px);border:2px solid var(--accent);border-radius:4px;overflow:hidden;box-shadow:0 0 30px rgba(0,212,255,0.2);"></div><button class="game-btn" onclick="chessStart()">🔄 Nouvelle partie</button></div>
+      <div class="page-header">
+        <div>
+          <h2>♟️ Chess.com</h2>
+          <p>Jeu d’échecs local (AI) — marche sans intégration externe</p>
+        </div>
+      </div>
+      <div class="game-canvas-wrap" style="display:flex;align-items:center;justify-content:center;padding:14px;">
+        <div style="width:100%;max-width:760px;display:flex;flex-direction:column;gap:12px;">
+          <div style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px;box-shadow:0 0 30px rgba(0,212,255,0.12);">
+            <div id="chess-status-bar" style="font-family:'Share Tech Mono',monospace;font-size:13px;color:var(--text3);margin-bottom:10px;">Clique “JOUER” pour démarrer</div>
+            <div id="chess-board" style="display:grid;grid-template-columns:repeat(8,52px);grid-template-rows:repeat(8,52px);gap:0;justify-content:center;"></div>
+            <div style="display:flex;justify-content:center;margin-top:14px;">
+              <button type="button" class="game-btn" style="padding:10px 20px;font-size:14px;" onclick="chessStart()">🔄 JOUER</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- PARKOUR RUNNER -->
@@ -3337,8 +3365,8 @@ input[type=range]::-webkit-slider-thumb {
     <!-- PAGE GRADES -->
     <div id="page-grades" class="page">
       <div class="page-header">
-        <div><h2>GRADES VIBECRAFT</h2><p>Les rangs disponibles sur play.globaleurope.fr</p></div>
-        <button class="add-server-btn" onclick="vibe.utils.openUrl('https://play.globaleurope.fr')">🌐 Rejoindre</button>
+        <div><h2>GRADES VIBECRAFT</h2><p>Les rangs disponibles sur play.vibe-craft.fr</p></div>
+        <button class="add-server-btn" onclick="vibe.utils.openUrl('https://play.vibe-craft.fr')">🌐 Rejoindre</button>
       </div>
 
       <!-- Catégories -->
@@ -3550,6 +3578,16 @@ input[type=range]::-webkit-slider-thumb {
           allowfullscreen=""
           allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
           loading="lazy"></iframe>
+        <iframe
+          data-testid="embed-iframe"
+          style="border-radius:12px"
+          src="https://open.spotify.com/embed/playlist/2TRm9AiAGk1tjjPFwhgP6i?utm_source=generator"
+          width="100%"
+          height="352"
+          frameBorder="0"
+          allowfullscreen=""
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"></iframe>
       </div>
       <div id="ge-soundcloud" style="display:none;">
         <iframe
@@ -3714,6 +3752,8 @@ const VERSIONS_DATA = {
 let selectedVersion = null;
 let gameDir = '';
 let settings = {};
+// chessViewActive n'est plus utilisé (jeu d'échecs local)
+let chessViewActive = false;
 
 // ==================== INIT ====================
 async function init() {
@@ -3748,6 +3788,7 @@ function showPage(name, btn) {
   if (name === 'community') initDiscordWidgets();
   if (name === 'themes') renderWallpaperGrid();
   if (!name.startsWith('game-')) stopActiveGame();
+  if (name === 'game-chess') chessStart();
   if (name === 'game-2048' && !g2048Grid) g2048Start();
   if (name === 'game-candy' && !candyState) candyStart(1);
   if (name === 'game-connect4' && !c4Board) connect4Start();
@@ -4233,10 +4274,10 @@ function loadServers() {
   try {
     const s = ipcRenderer.sendSync('load-servers');
     servers = s || [
-      { name: 'VibeCraft', ip: 'play.globaleurope.fr' }
+      { name: 'VibeCraft', ip: 'play.vibe-craft.fr' }
     ];
   } catch(e) {
-    servers = [{ name: 'VibeCraft', ip: 'play.globaleurope.fr' }];
+    servers = [{ name: 'VibeCraft', ip: 'play.vibe-craft.fr' }];
   }
 }
 
@@ -4557,7 +4598,7 @@ async function loadMap() {
   statusEl.textContent = t('js_mapcheck');
 
   // Ping serveur pour voir si en ligne
-  const ping = await pingServer('play.globaleurope.fr', 25565);
+  const ping = await pingServer('play.vibe-craft.fr', 25565);
   const playerCount = document.getElementById('map-player-count');
 
   if (ping === null) {
@@ -4570,7 +4611,7 @@ async function loadMap() {
   playerCount.style.color = 'var(--green)';
 
   // Essayer de charger la dynmap
-  const dynmapUrl = 'http://play.globaleurope.fr';
+  const dynmapUrl = 'http://play.vibe-craft.fr';
   statusEl.textContent = t('js_mapload');
 
   webview.src = dynmapUrl;
@@ -6077,6 +6118,96 @@ function geShow(which) {
 
 window.geToggle = geToggle;
 window.geShow = geShow;
+
+// ==================== CHESS.COM (reset - webview simple) ====================
+const CHESS_DAILY_URL = 'https://www.chess.com/daily-chess-puzzle';
+
+function openChessInLauncherWindow() {
+  try {
+    if (window.vibe && window.vibe.utils && typeof window.vibe.utils.openChessWindow === 'function') {
+      window.vibe.utils.openChessWindow();
+      return;
+    }
+  } catch (e) { console.warn('openChessInLauncherWindow vibe:', e); }
+  try {
+    const { ipcRenderer } = require('electron');
+    ipcRenderer.send('open-chess-window');
+    return;
+  } catch (e) { console.warn('openChessInLauncherWindow ipc:', e); }
+  openChessDaily();
+}
+
+function openChessDaily() {
+  try {
+    if (window.vibe && window.vibe.utils && typeof window.vibe.utils.openUrl === 'function') {
+      window.vibe.utils.openUrl(CHESS_DAILY_URL);
+      return;
+    }
+  } catch (e) { console.warn('openChessDaily vibe:', e); }
+  try {
+    const { shell } = require('electron');
+    shell.openExternal(CHESS_DAILY_URL);
+    return;
+  } catch (e) { console.warn('openChessDaily shell:', e); }
+  try {
+    window.open(CHESS_DAILY_URL, '_blank', 'noopener,noreferrer');
+  } catch (e2) {
+    alert('Impossible d’ouvrir Chess.com. Copie ce lien : ' + CHESS_DAILY_URL);
+  }
+}
+
+let chessWebviewInitDone = false;
+function initChessWebview() {
+  const wv = document.getElementById('chess-webview');
+  const statusEl = document.getElementById('chess-webview-status');
+  if (!wv || !statusEl) return;
+  if (chessWebviewInitDone) return;
+  chessWebviewInitDone = true;
+
+  let loaded = false;
+  let triedReload = false;
+
+  statusEl.textContent = 'Chargement Chess.com…';
+
+  try {
+    wv.addEventListener('did-start-loading', () => {
+      statusEl.textContent = 'Chargement Chess.com…';
+    });
+    wv.addEventListener('did-finish-load', () => {
+      loaded = true;
+      statusEl.textContent = '';
+    });
+    wv.addEventListener('did-fail-load', (e) => {
+      loaded = true; // stop timers
+      statusEl.innerHTML =
+        'Chargement impossible dans le webview. ' +
+        '<button type="button" class="game-btn" style="padding:8px 14px;font-size:13px;margin-top:8px;" onclick="openChessInLauncherWindow()">▶ Jouer dans une fenêtre</button>';
+      console.warn('chess webview did-fail-load:', e);
+    });
+  } catch (err) {
+    console.warn('initChessWebview:', err);
+  }
+
+  setTimeout(() => {
+    if (loaded) return;
+    if (!triedReload) {
+      triedReload = true;
+      try { statusEl.textContent = 'Recharge Chess.com…'; } catch {}
+      try {
+        const currentSrc = wv.getAttribute('src') || CHESS_DAILY_URL;
+        wv.src = currentSrc;
+      } catch { /* ignore */ }
+      return;
+    }
+    statusEl.innerHTML =
+      'Chess.com ne se charge pas après essai. ' +
+      '<button type="button" class="game-btn" style="padding:8px 14px;font-size:13px;margin-top:8px;" onclick="openChessInLauncherWindow()">▶ Jouer dans une fenêtre</button>';
+  }, 15000);
+}
+
+window.openChessDaily = openChessDaily;
+window.openChessInLauncherWindow = openChessInLauncherWindow;
+// (webview désactivé : chess.com bloque le guest view)
 
 // ==================== FROGGER ====================
 let froggerRAF;
@@ -9222,6 +9353,12 @@ function initDiscordWidgets() {
   loadDiscordWidget('1259502066892669028',
     document.getElementById('kiro-discord-status'),
     document.getElementById('kiro-discord-members')
+  );
+
+  // Améthyste (invite: https://discord.gg/6r2eBCQD)
+  loadDiscordWidget('1069316301656445039',
+    document.getElementById('amet-discord-status'),
+    document.getElementById('amet-discord-members')
   );
 }
 
