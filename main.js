@@ -165,6 +165,7 @@ ipcMain.handle('ms-get-account', async () => {
 let mainWindow;
 
 const FORGE_VERSIONS = {
+  '1.8.9':  '1.8.9-11.15.1.2318-1.8.9',
   '1.9.4':  '1.9.4-12.17.0.2317-1.9.4',
   '1.10.2': '1.10.2-12.18.3.2511',
   '1.11.2': '1.11.2-13.20.1.2588',
@@ -173,12 +174,14 @@ const FORGE_VERSIONS = {
   '1.15.2': '1.15.2-31.2.57'
 };
 
-const FABRIC_LOADER = '0.15.11';
+const FABRIC_LOADER_META = 'https://meta.fabricmc.net/v2/versions/loader';
+let fabricLoaderVersionCache = null;
 
 // Java requis par version MC
 // Forge 1.9.4-1.16.5 = Java 8
 // Fabric 1.16.5+ = Java 21
 const JAVA_REQUIREMENTS = {
+  '1.8.9':  8,
   '1.9.4':  8,  '1.10.2': 8,  '1.11.2': 8,
   '1.12.2': 8,  '1.14.4': 8,  '1.15.2': 8,
   '1.16.5': 21, // Fabric
@@ -694,13 +697,37 @@ function findSystemJava(majorVersion) {
   return null;
 }
 
-// Cherche Fabric installé
-function findFabricVersion(gameDir, mcVersion) {
-  const dir = path.join(gameDir, 'versions');
-  if (!fs.existsSync(dir)) return null;
-  return fs.readdirSync(dir).find(d =>
-    d.startsWith('fabric-loader-') && d.endsWith(`-${mcVersion}`)
-  ) || null;
+async function getFabricLoaderVersion() {
+  if (fabricLoaderVersionCache) return fabricLoaderVersionCache;
+  const list = await fetchJson(FABRIC_LOADER_META);
+  if (!Array.isArray(list) || list.length === 0) {
+    throw new Error('Méta Fabric indisponible (loader)');
+  }
+  const stable = list.find(e => e && e.stable && e.version);
+  const ver = stable ? stable.version : list[0].version;
+  if (!ver) throw new Error('Version Fabric Loader introuvable');
+  fabricLoaderVersionCache = ver;
+  return ver;
+}
+
+function findFabricVersion(gameDir, mcVersion, loaderVersion) {
+  const exact = `fabric-loader-${loaderVersion}-${mcVersion}`;
+  if (fs.existsSync(path.join(gameDir, 'versions', exact))) return exact;
+  return null;
+}
+
+function removeOtherFabricProfiles(gameDir, mcVersion, keepLoaderVersion) {
+  const versionsRoot = path.join(gameDir, 'versions');
+  if (!fs.existsSync(versionsRoot)) return;
+  const keep = `fabric-loader-${keepLoaderVersion}-${mcVersion}`;
+  for (const d of fs.readdirSync(versionsRoot)) {
+    if (d.startsWith('fabric-loader-') && d.endsWith(`-${mcVersion}`) && d !== keep) {
+      try {
+        fs.rmSync(path.join(versionsRoot, d), { recursive: true, force: true });
+        send(`🗑 Ancien profil Fabric retiré : ${d}`);
+      } catch { /* ignore */ }
+    }
+  }
 }
 
 // Cherche Forge installé
@@ -714,12 +741,15 @@ function findForgeVersion(gameDir, mcVersion) {
 
 // Installe Fabric
 async function installFabric(gameDir, mcVersion) {
-  const versionId = `fabric-loader-${FABRIC_LOADER}-${mcVersion}`;
+  const loaderVer = await getFabricLoaderVersion();
+  removeOtherFabricProfiles(gameDir, mcVersion, loaderVer);
+
+  const versionId = `fabric-loader-${loaderVer}-${mcVersion}`;
   const versionDir = path.join(gameDir, 'versions', versionId);
   if (!fs.existsSync(versionDir)) fs.mkdirSync(versionDir, { recursive: true });
 
-  send(`⬇ Téléchargement profil Fabric ${mcVersion}...`);
-  const profileUrl = `https://meta.fabricmc.net/v2/versions/loader/${mcVersion}/${FABRIC_LOADER}/profile/json`;
+  send(`⬇ Téléchargement profil Fabric ${mcVersion} (loader ${loaderVer})...`);
+  const profileUrl = `https://meta.fabricmc.net/v2/versions/loader/${mcVersion}/${loaderVer}/profile/json`;
   const profilePath = path.join(versionDir, `${versionId}.json`);
   await downloadFile(profileUrl, profilePath);
 
@@ -772,7 +802,7 @@ async function installForge(gameDir, mcVersion, javaPath) {
 
   // Vieux Forge (1.9.4-1.12.2) : GUI only, cwd=gameDir
   // Nouveaux Forge (1.14.4+) : --installClient
-  const oldForgeVersions = ['1.9.4', '1.10.2', '1.11.2', '1.12.2'];
+  const oldForgeVersions = ['1.8.9', '1.9.4', '1.10.2', '1.11.2', '1.12.2'];
   const isOld = oldForgeVersions.includes(mcVersion);
   const javaArgs = isOld
     ? ['-Djava.net.preferIPv4Stack=true', '-jar', installerPath]
@@ -804,8 +834,21 @@ async function installForge(gameDir, mcVersion, javaPath) {
   });
 }
 
+function resolveModSourcePath(srcMods, mod) {
+  const primary = path.join(srcMods, mod.file);
+  if (fs.existsSync(primary)) return primary;
+  const alts = mod.altFiles;
+  if (Array.isArray(alts)) {
+    for (const name of alts) {
+      const p = path.join(srcMods, name);
+      if (fs.existsSync(p)) return p;
+    }
+  }
+  return null;
+}
+
 // LANCEMENT PRINCIPAL
-ipcMain.on('launch-minecraft', async (event, { username, version, gameDir, ram, mods, loaderType }) => {
+ipcMain.on('launch-minecraft', async (event, { username, version, gameDir, ram, mods, loaderType, noLag }) => {
   try {
     // 1. Préparer dossier et mods
     const gameDirectory = path.join(gameDir, 'vibelauncher', version);
@@ -821,9 +864,16 @@ ipcMain.on('launch-minecraft', async (event, { username, version, gameDir, ram, 
     if (fs.existsSync(srcMods)) {
       for (const mod of mods) {
         if (!mod.enabled) continue;
-        const src = path.join(srcMods, mod.file);
-        if (fs.existsSync(src)) { fs.copyFileSync(src, path.join(modsDir, mod.file)); copied++; }
-        else send(`⚠ Mod introuvable : ${mod.file}`);
+        const src = resolveModSourcePath(srcMods, mod);
+        if (src) {
+          fs.copyFileSync(src, path.join(modsDir, mod.file));
+          copied++;
+          if (path.basename(src) !== mod.file) {
+            send(`✓ Mod ${mod.file} ← ${path.basename(src)}`);
+          }
+        } else {
+          send(`⚠ Mod introuvable : ${mod.file}`);
+        }
       }
     }
     send(`✓ ${copied} mod(s) copié(s)`);
@@ -835,7 +885,9 @@ ipcMain.on('launch-minecraft', async (event, { username, version, gameDir, ram, 
     // 3. Installer loader si absent
     let launchVersion;
     if (loaderType === 'fabric') {
-      launchVersion = findFabricVersion(gameDir, version);
+      const fabricLoaderVer = await getFabricLoaderVersion();
+      send(`✓ Fabric Loader stable : ${fabricLoaderVer}`);
+      launchVersion = findFabricVersion(gameDir, version, fabricLoaderVer);
       if (!launchVersion) {
         send(`🔧 Installation Fabric ${version}...`);
         launchVersion = await installFabric(gameDir, version);
@@ -894,6 +946,33 @@ ipcMain.on('launch-minecraft', async (event, { username, version, gameDir, ram, 
       ].join('-');
       authorization = { access_token: uuid, client_token: uuid, uuid, name: username, user_properties: '{}' };
     }
+    const useJava8 = (JAVA_REQUIREMENTS[version] || 21) === 8;
+    const baseJvm = useJava8
+      ? ['-Dfml.ignoreInvalidMinecraftCertificates=true', '-Dfml.ignorePatchDiscrepancies=true']
+      : [
+          '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
+          '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED',
+          '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
+          '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
+          '--add-opens', 'java.base/java.io=ALL-UNNAMED',
+          '--add-opens', 'java.base/java.util=ALL-UNNAMED',
+          '-Dfml.ignoreInvalidMinecraftCertificates=true',
+          '-Dfml.ignorePatchDiscrepancies=true'
+        ];
+
+    const noLagEnabled = noLag !== false;
+    const noLagJvm = noLagEnabled ? [
+      '-XX:+UseG1GC',
+      '-XX:+UnlockExperimentalVMOptions',
+      '-XX:MaxGCPauseMillis=50',
+      '-XX:+ParallelRefProcEnabled',
+      '-XX:+UseStringDeduplication',
+      '-Dfml.readTimeout=180',
+    ] : [];
+
+    const forgeJvmArgs = [...baseJvm, ...noLagJvm];
+    if (noLagEnabled) send('⚡ Mode No-Lag : JVM (G1GC, pauses courtes, FML readTimeout)');
+
     const opts = {
       authorization,
       root: gameDir,
@@ -903,16 +982,7 @@ ipcMain.on('launch-minecraft', async (event, { username, version, gameDir, ram, 
         gameDirectory: gameDirectory,
         java: javaPath,   // minecraft-launcher-core v3
         exec: javaPath,   // fallback nom alternatif
-        javaArgs: [
-          '--add-opens', 'java.base/java.nio=ALL-UNNAMED',
-          '--add-opens', 'java.base/sun.nio.ch=ALL-UNNAMED',
-          '--add-opens', 'java.base/java.lang=ALL-UNNAMED',
-          '--add-opens', 'java.base/java.lang.reflect=ALL-UNNAMED',
-          '--add-opens', 'java.base/java.io=ALL-UNNAMED',
-          '--add-opens', 'java.base/java.util=ALL-UNNAMED',
-          '-Dfml.ignoreInvalidMinecraftCertificates=true',
-          '-Dfml.ignorePatchDiscrepancies=true'
-        ]
+        javaArgs: forgeJvmArgs
       }
     };
 

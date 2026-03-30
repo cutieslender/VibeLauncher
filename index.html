@@ -40,6 +40,11 @@ body {
   cursor: default;
 }
 
+body.launcher-no-lag .wallpaper-card { transition: none !important; }
+body.launcher-no-lag .wallpaper-card:hover { transform: none !important; }
+body.launcher-no-lag #bg-layer { transition: opacity 0.15s ease !important; }
+body.launcher-no-lag #titlebar { backdrop-filter: none; }
+
 /* Background image */
 body::before {
   content: '';
@@ -1799,7 +1804,7 @@ input[type=range]::-webkit-slider-thumb {
 
     </div>
     <div class="sidebar-bottom">
-      <div class="version-display">v1.0.0 — VibeLauncher</div>
+      <div class="version-display">v2.0.3 — VibeLauncher</div>
     </div>
   </div>
 
@@ -1855,6 +1860,10 @@ input[type=range]::-webkit-slider-thumb {
               <input type="range" id="ramSlider" min="1" max="16" value="4"
                 oninput="document.getElementById('ramVal').textContent=this.value">
             </div>
+            <label class="no-lag-row" style="display:flex;align-items:center;gap:10px;margin-top:14px;cursor:pointer;font-size:13px;color:var(--text2);">
+              <input type="checkbox" id="noLagMode" checked onchange="onNoLagToggle()">
+              <span>⚡ Mode No-Lag <span style="opacity:0.75;font-size:11px;">(JVM + interface allégée)</span></span>
+            </label>
           </div>
         </div>
 
@@ -2157,7 +2166,7 @@ input[type=range]::-webkit-slider-thumb {
         <div class="about-logo-section">
           <img src="logo.webp" style="width:100px;height:100px;border-radius:50%;object-fit:cover;box-shadow:0 0 30px #7b2fff88;display:block;margin:0 auto 16px;">
           <div class="about-title">VibeLauncher</div>
-          <div class="about-version">v1.0.0</div>
+          <div class="about-version">v2.0.3</div>
           <div class="about-tagline">Le launcher officiel de VibeCraft — joue avec tes amis et éclate toi</div>
         </div>
 
@@ -2192,14 +2201,24 @@ input[type=range]::-webkit-slider-thumb {
       </div>
       <div class="changelog-content">
 
-        <div class="changelog-section-title">🚀 LAUNCHER — v1.0.0</div>
+        <div class="changelog-section-title">🚀 LAUNCHER — v2.0.3</div>
+        <div class="changelog-card">
+          <div class="changelog-tag update">MISE À JOUR</div>
+          <div class="changelog-text">Fabric Loader : toujours la dernière version stable (meta.fabricmc.net), avec nettoyage des anciens profils par version MC</div>
+        </div>
+        <div class="changelog-card">
+          <div class="changelog-tag update">MISE À JOUR</div>
+          <div class="changelog-text">Version affichée et changelog alignés sur la release 2.0.3</div>
+        </div>
+
+        <div class="changelog-section-title" style="margin-top:24px;">🚀 LAUNCHER — v1.0.0</div>
         <div class="changelog-card">
           <div class="changelog-tag new">NOUVEAU</div>
           <div class="changelog-text">Lancement de VibeLauncher v1.0.0 — le launcher officiel de VibeCraft</div>
         </div>
         <div class="changelog-card">
           <div class="changelog-tag new">NOUVEAU</div>
-          <div class="changelog-text">Support de toutes les versions MC de 1.9.4 à 1.21.11 (Forge & Fabric)</div>
+          <div class="changelog-text">Support de toutes les versions MC de 1.8.9 à 1.21.11 (Forge & Fabric)</div>
         </div>
         <div class="changelog-card">
           <div class="changelog-tag new">NOUVEAU</div>
@@ -3408,6 +3427,26 @@ const { ipcRenderer } = require('electron');
 
 // ==================== DATA ====================
 const VERSIONS_DATA = {
+  "1.8.9": {
+    loader: "forge",
+    mods: [
+      {
+        name: "OptiFine HD U L5",
+        file: "OptiFine_1_8_9_HD_U_L5.jar",
+        altFiles: ["OptiFine_1.8.9_HD_U_L5.jar", "OptiFine_1_8_9_HD_U_L7.jar", "OptiFine_1.8.9_HD_U_L7.jar"],
+        enabled: false,
+        icon: "🔆"
+      },
+      { name: "BetterFps", file: "BetterFps-1_4_1.jar", altFiles: ["BetterFps-1.4.1.jar"], enabled: false, icon: "⚡" },
+      {
+        name: "VibeMods",
+        file: "vibemod-1.0.0-1.8.9.jar",
+        altFiles: ["vibemod-1_8_9.jar", "vibemod-1.0.2.jar", "vibemod.jar", "vibemod-1.0.0.jar"],
+        enabled: true,
+        icon: "🎵"
+      }
+    ]
+  },
   "1.9.4": {
     loader: "forge",
     mods: [
@@ -3537,6 +3576,21 @@ let selectedVersion = null;
 let gameDir = '';
 let settings = {};
 
+function applyNoLagUi(enabled) {
+  document.body.classList.toggle('launcher-no-lag', !!enabled);
+}
+
+async function onNoLagToggle() {
+  const el = document.getElementById('noLagMode');
+  if (!el) return;
+  applyNoLagUi(el.checked);
+  try {
+    const prev = await ipcRenderer.invoke('load-settings') || {};
+    prev.noLagMode = el.checked;
+    await ipcRenderer.invoke('save-settings', prev);
+  } catch { /* ignore */ }
+}
+
 // ==================== INIT ====================
 async function init() {
   // Load settings
@@ -3548,6 +3602,13 @@ async function init() {
     const ramVal = saved.ram || saved.defaultRam; if (ramVal) { document.getElementById("ramSlider").value = ramVal; document.getElementById("ramVal").textContent = ramVal; document.getElementById("defaultRam").value = ramVal; }
     if (saved.defaultUsername) document.getElementById('defaultUsername').value = saved.defaultUsername;
     if (saved.defaultRam) document.getElementById('defaultRam').value = saved.defaultRam;
+    const nl = document.getElementById('noLagMode');
+    if (nl) {
+      nl.checked = saved.noLagMode !== false;
+      applyNoLagUi(nl.checked);
+    }
+  } else {
+    applyNoLagUi(true);
   }
 
   if (!gameDir) {
@@ -3761,6 +3822,9 @@ async function launchGame() {
   log('> Version : ' + selectedVersion + ' [' + data.loader.toUpperCase() + ']');
   log('> Joueur  : ' + effectiveUsername);
   log('> RAM     : ' + ram + ' Go');
+  const nlEl = document.getElementById('noLagMode');
+  const noLag = nlEl ? nlEl.checked : true;
+  log('> No-Lag  : ' + (noLag ? 'ON' : 'OFF'));
   log('> Mods actifs : ' + data.mods.filter(m => m.enabled).length + '/' + data.mods.length);
   log('> Dossier : ' + gameDir);
 
@@ -3774,7 +3838,8 @@ async function launchGame() {
     gameDir,
     ram,
     mods: data.mods,
-    loaderType: data.loader
+    loaderType: data.loader,
+    noLag
   });
 }
 
@@ -3859,12 +3924,16 @@ async function saveSettings() {
     document.getElementById('username').value = newDefaultUsername;
   }
 
+  const prev = await ipcRenderer.invoke('load-settings') || {};
+  const nlEl = document.getElementById('noLagMode');
   const s = {
+    ...prev,
     gameDir: newGameDir,
     defaultRam: newDefaultRam,
     defaultUsername: newDefaultUsername,
     username: document.getElementById('username').value.trim(),
-    ram: newDefaultRam
+    ram: newDefaultRam,
+    noLagMode: nlEl ? nlEl.checked : true
   };
 
   gameDir = s.gameDir;
