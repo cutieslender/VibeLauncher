@@ -1,7 +1,11 @@
 🎮 VibeLauncher
+
 🛠️ Installation du Launcher
+
 1️⃣ Décompresser le dossier
+
 VibeLauncher.zip
+
 2️⃣ Ajouter les mods
 
 Créer la structure suivante :
@@ -15,11 +19,17 @@ mods/
 ├── 1.11.2/
 ├── 1.12.2/
 └── ...
+
 3️⃣ Installer les dépendances
+
 npm install
+
 4️⃣ Lancer le launcher
+
 npm start
+
 🖥️ Compiler en .EXE
+
 npm run build
 
 Le fichier sera dans :
