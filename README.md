@@ -55,6 +55,7 @@ vibelauncher/
 │   └── ...
 │
 └── dist/
+
 🎨 Interface
 Thème sombre
 Boutons modernes
@@ -74,13 +75,14 @@ Node.js
 HTML / CSS / JS
 Minecraft Launcher Core
 Forge / Fabric
+
 📜 Licence
 
 MIT License
 
 👨‍💻 Auteur
 
-VibeLauncher Project
+VibeLauncher Project X BroSyo_o & Esteban L
 
 ⭐ Support
 
